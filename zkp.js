@@ -13,6 +13,11 @@ function randomBit() {
   return Math.random() < 0.5 ? 0 : 1;
 }
 
+function hashToBit(input) {
+  const hash = crypto.createHash('sha256').update(input.toString()).digest('hex');
+  return parseInt(hash.slice(0, 2), 16) % 2;
+}
+
 // Semplice hash per prototipo (trasforma password in numero mod n)
 function simpleHash(password) {
   let h = 0;
@@ -49,11 +54,30 @@ function performZKPRounds(s, v, rounds = 5) {
   return { success, steps };
 }
 
+function performFiatShamirRounds(s, v, rounds = 5) {
+  const steps = [];
+  let success = true;
+  for (let i = 0; i < rounds; i++) {
+    const r = Math.floor(Math.random() * n);
+    const x = modSquare(r);
+    const e = hashToBit(x);
+    const y = e === 0 ? r : mod(r * s);
+    const left = modSquare(y);
+    const right = mod(x * (e === 0 ? 1 : v));
+    const roundSuccess = (left === right);
+    if (!roundSuccess) success = false;
+    steps.push({ round: i + 1, r, x, e, y, left, right, success: roundSuccess });
+    if (!success) break;
+  }
+  return { success, steps };
+}
+
+
 module.exports = {
   n,
   mod,
   modSquare,
-  randomBit,
   simpleHash,
-  performZKPRounds
+  performZKPRounds,
+  performFiatShamirRounds
 };

@@ -1,7 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
+const crypto = require('crypto');
 const { registerUser, getUser } = require('./userDb');
-const { simpleHash, performZKPRounds } = require('./zkp');
+const { simpleHash, performZKPRounds, performFiatShamirRounds, n } = require('./zkp');
 
 const app = express();
 const port = 3000;
@@ -32,13 +34,23 @@ app.post('/login', (req, res) => {
   if (!user) {
     return res.status(400).json({ error: 'Utente non trovato' });
   }
+
   const s = simpleHash(password);
-  const result = performZKPRounds(s, user.v, rounds || 5);
-  if (result.success) {
-    res.json({ success: true, steps: result.steps });
-  } else {
-    res.json({ success: false, steps: result.steps });
-  }
+  const protocolRounds = rounds || 5;
+  const useFiatShamir = mode === 'fiat-shamir';
+
+  const result = useFiatShamir
+    ? performFiatShamirRounds(s, user.v, protocolRounds)
+    : performZKPRounds(s, user.v, protocolRounds);
+
+  const impostorProbability = Math.pow(0.5, result.steps.length);
+
+  res.json({
+    success: result.success,
+    steps: result.steps,
+    probability: impostorProbability,
+    mode: useFiatShamir ? 'Fiat-Shamir' : 'Interattivo'
+  });
 });
 
 app.listen(port, () => {
