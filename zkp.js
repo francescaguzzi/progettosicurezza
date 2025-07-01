@@ -1,12 +1,21 @@
-
+const crypto = require('crypto');
 const n = 2357; // numero primo pubblico
 
-function mod(x, m = n) {
-  return ((x % m) + m) % m;
+
+function simpleHash(password) {
+  const hash = crypto.createHash('sha256').update(password).digest('hex');
+  return parseInt(hash.slice(0, 8), 16) % n; // Prendi i primi 8 caratteri per un numero più grande
 }
 
+// funzione di quadrato modulare 
 function modSquare(x) {
   return mod(x * x);
+}
+
+function mod(x, m = n) {
+  x = BigInt(x);
+  m = BigInt(m);
+  return Number((x % m + m) % m);
 }
 
 function randomBit() {
@@ -19,13 +28,13 @@ function hashToBit(input) {
 }
 
 // Semplice hash per prototipo (trasforma password in numero mod n)
-function simpleHash(password) {
+/* function simpleHash(password) {
   let h = 0;
   for (const c of password) {
     h = mod(h * 31 + c.charCodeAt(0));
   }
   return h;
-}
+} */
 
 // Esegue i round ZKP e ritorna i dettagli
 function performZKPRounds(s, v, rounds = 5) {

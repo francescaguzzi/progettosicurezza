@@ -96,6 +96,12 @@
 
 <section>
   <h3>Login</h3>
+
+  <select id="authMode">
+    <option value="interactive">Interattivo</option>
+    <option value="fiat-shamir">Fiat-Shamir (non interattivo)</option>
+  </select>
+
   <input id="loginUser" placeholder="Username" autocomplete="off" />
   <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" />
   <input id="rounds" type="number" value="5" min="1" max="20" aria-label="Numero di round ZKP" />
@@ -143,6 +149,7 @@ async function register() {
 }
 
 async function login() {
+  const mode = document.getElementById('authMode').value;
   const username = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPass').value;
   const rounds = parseInt(document.getElementById('rounds').value) || 5;
@@ -161,7 +168,7 @@ async function login() {
     const res = await fetch('/login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ username, password, rounds })
+      body: JSON.stringify({ username, password, rounds, mode })
     });
     const data = await res.json();
 
@@ -172,23 +179,29 @@ async function login() {
     }
 
     if (data.steps) {
-      for (const step of data.steps) {
-        const div = document.createElement('div');
-        div.className = 'step';
-        div.innerHTML = `
-          <strong>Round ${step.round}</strong><br>
-          r = ${step.r}<br>
-          x = ${step.x}<br>
-          e = ${step.e}<br>
-          y = ${step.y}<br>
-          y² mod n = ${step.left}<br>
-          x * v^e mod n = ${step.right}<br>
-          Verifica: ${step.success ? '✅' : '❌'}`;
-        stepsContainer.appendChild(div);
-      }
-      // Scroll automatico all'ultimo round
-      stepsContainer.scrollTop = stepsContainer.scrollHeight;
-      stepsContainer.focus();
+      stepsContainer.innerHTML = `
+        <h4>Modalità: ${data.mode}</h4>
+        <p>Probabilità che sia un impostore: ${(data.probability * 100).toFixed(6)}%</p>
+      `;
+      
+      data.steps.forEach(step => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = `step ${step.success ? '' : 'fail-step'}`;
+        stepDiv.innerHTML = `
+          <strong>Round ${step.round}: ${step.success ? '✅' : '❌'}</strong>
+          <div class="step-details">
+            <table>
+              <tr><td>r (random):</td><td>${step.r}</td></tr>
+              <tr><td>x = r² mod n:</td><td>${step.x}</td></tr>
+              <tr><td>e (challenge):</td><td>${step.e}</td></tr>
+              <tr><td>y = ${step.e === 0 ? 'r' : 'r*s'}:</td><td>${step.y}</td></tr>
+              <tr><td>y² mod n:</td><td>${step.left}</td></tr>
+              <tr><td>x * v${step.e ? '^e' : ''} mod n:</td><td>${step.right}</td></tr>
+            </table>
+          </div>
+        `;
+        stepsContainer.appendChild(stepDiv);
+      });
     }
   } catch {
     output.innerHTML = `<p class="fail">Errore di rete</p>`;
