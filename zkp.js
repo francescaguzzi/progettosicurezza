@@ -36,7 +36,7 @@ function hashToBit(input) {
   return h;
 } */
 
-// Esegue i round ZKP e ritorna i dettagli
+// Esegue i round zero knowledge proof e ritorna i dettagli
 function performZKPRounds(s, v, rounds = 5) {
   const steps = [];
   let success = true;
@@ -44,7 +44,8 @@ function performZKPRounds(s, v, rounds = 5) {
   for (let i = 0; i < rounds; i++) {
     const r = Math.floor(Math.random() * n);
     const x = modSquare(r);
-    const e = randomBit();
+    const e = randomBit(); // Generato dal Verifier in modo imprevedibile
+    // Un attaccante attivo non può prevedere e quindi non può preparare x appropriato
     const y = e === 0 ? r : mod(r * s);
     const left = modSquare(y);
     const right = mod(x * (e === 0 ? 1 : v));
@@ -63,14 +64,17 @@ function performZKPRounds(s, v, rounds = 5) {
   return { success, steps };
 }
 
+// trasformazione fiat-shamir
 function performFiatShamirRounds(s, v, rounds = 5) {
   const steps = [];
   let success = true;
   for (let i = 0; i < rounds; i++) {
     const r = Math.floor(Math.random() * n);
     const x = modSquare(r);
-    const e = hashToBit(x);
+    const e = hashToBit(x); // Deterministico ma non influenzabile...
+    // ...a meno che l'attaccante non trovi collisioni hash o controlli x
     const y = e === 0 ? r : mod(r * s);
+    // Un osservatore vede solo (x, y) ma non può ricavare s
     const left = modSquare(y);
     const right = mod(x * (e === 0 ? 1 : v));
     const roundSuccess = (left === right);

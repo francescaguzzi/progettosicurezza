@@ -52,14 +52,21 @@ app.post('/login', (req, res) => {
     ? performFiatShamirRounds(s, user.v, protocolRounds)
     : performZKPRounds(s, user.v, protocolRounds);
 
+    const successfulRounds = result.steps.filter(step => step.success).length;
+    const impostorProbability = Math.pow(0.5, successfulRounds);
+    // Probabilità di successo di un attacco:
+    // In ogni round, un impostore ha il 50% di possibilità di indovinare correttamente la risposta (poiché la sfida e è binaria)
+    // Per n round indipendenti, la probabilità diventa (0.5)^n
+    // La trasformazione di Fiat-Shamir preserva le proprietà di sicurezza del protocollo originale, compresa la probabilità che un impostore abbia successo.
+
     res.json({
       success: result.success,
       steps: result.steps,
-      probability: Math.pow(0.5, result.steps.filter(s => s.success).length),
+      probability: impostorProbability,
+      successfulRounds,
+      totalRounds: result.steps.length,
       mode: useFiatShamir ? 'Fiat-Shamir' : 'Interattivo'
     });
-    // probabilità di successo di un attacco:
-    // 
 
   } catch (error) {
     console.error('Login error:', error);
