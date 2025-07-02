@@ -1,7 +1,4 @@
 <!-- Supporto Mermaid -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true});</script>
-
 # Sistema di autenticazione basato su Zero Knowledge Proof
 
 Un prototipo didattico che implementa un sistema di autenticazione basato su **Zero Knowledge Proof** (ZKP), con due varianti:
@@ -28,7 +25,7 @@ e = \mathcal{H}(x) \mod 2
 ```
 dove `H` è una funzione hash crittograficamente sicura (es. SHA-256). 
 
-Tra i suoi vantaggi principali, elimina la comunicazione singola e risulta più efficiente in contesti asincroni (es. blockchain)
+Tra i suoi vantaggi principali, elimina la comunicazione singola e risulta più efficiente in contesti asincroni (es. blockchain).
 
 ### Protocollo Implementato
 Variante del protocollo di Feige-Fiat-Shamir semplificato:
@@ -40,18 +37,19 @@ Variante del protocollo di Feige-Fiat-Shamir semplificato:
 
 2. **Autenticazione** (per ogni round):
 
-- Modalità interattiva
-```mermaid
-    sequenceDiagram
-    participant P as Prover
-    participant V as Verifier
-    P->>V: x = r² mod n
-    V->>P: e ∈ {0,1} (sfida)
-    P->>V: y = r·sᵉ mod n
-    V->>V: Verifica y² ≡ x·vᵉ mod n
-```
-- Fiat-Shamir (non interattiva)
-    Il prover genera autonomamente `e = hash(x) % 2` (sfida derivata) ed elimina l'interazione, mantenendo la sicurezza
+    - Modalità interattiva
+    ```mermaid
+        sequenceDiagram
+        participant P as Prover
+        participant V as Verifier
+        P->>V: x = r² mod n
+        V->>P: e ∈ {0,1} (sfida)
+        P->>V: y = r·sᵉ mod n
+        V->>V: Verifica y² ≡ x·vᵉ mod n
+    ```
+    - Fiat-Shamir (non interattiva)
+        
+        - Il prover genera autonomamente `e = hash(x) % 2` (sfida derivata) ed elimina l'interazione, mantenendo la sicurezza
 
 --------------
 
@@ -110,9 +108,9 @@ progettosicurezza/
 
 1. Clonare il repository
 2. Installare le dipendenze:
-    ```bash
-        npm install express body-parser crypto
-    ```
+```bash
+    npm install express body-parser crypto
+```
 3. Avviare il server:
 ```bash
     node server.js
