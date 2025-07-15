@@ -115,6 +115,22 @@ const regBtn = document.getElementById('regBtn');
 const loginBtn = document.getElementById('loginBtn');
 const stepsContainer = document.getElementById('stepsContainer');
 
+const n = 2357;
+
+async function simpleHash(password) {
+  
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  
+  // Calcola l'hash SHA-256
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Prende i primi 8 caratteri e converte in numero
+  return parseInt(hashHex.slice(0, 8), 16) % n;
+}
+
 async function register() {
   const username = document.getElementById('regUser').value.trim();
   const password = document.getElementById('regPass').value;
@@ -165,10 +181,13 @@ async function login() {
   loginBtn.disabled = true;
 
   try {
+
+    const secret = await simpleHash(password);
+
     const res = await fetch('/login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ username, password, rounds, mode })
+      body: JSON.stringify({ username, secret, rounds, mode })
     });
     const data = await res.json();
 

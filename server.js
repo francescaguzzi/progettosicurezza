@@ -29,8 +29,8 @@ app.post('/register', (req, res) => {
 
 // Login con ZKP
 app.post('/login', (req, res) => {
-  const { username, password, rounds } = req.body;
-  if (!username || !password) {
+  const { username, secret, rounds } = req.body;
+  if (!username || !secret) {
     return res.status(400).json({ error: 'Username e password richiesti' });
   }
 
@@ -44,13 +44,13 @@ app.post('/login', (req, res) => {
   }
 
   try {
-    const s = simpleHash(password);
+    // const s = simpleHash(password);
     const protocolRounds = Math.min(Math.max(rounds || 5, 1), 20); // Clamp 1-20
     const useFiatShamir = mode === 'fiat-shamir';
 
     const result = useFiatShamir
-    ? performFiatShamirRounds(s, user.v, protocolRounds)
-    : performZKPRounds(s, user.v, protocolRounds);
+    ? performFiatShamirRounds(secret, user.v, protocolRounds)
+    : performZKPRounds(secret, user.v, protocolRounds);
 
     const successfulRounds = result.steps.filter(step => step.success).length;
     const impostorProbability = Math.pow(0.5, successfulRounds);
